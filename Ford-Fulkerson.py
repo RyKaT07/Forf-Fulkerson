@@ -21,27 +21,25 @@ def CzySciezka(krawedzie: droga, zrodlo, wyjscie):
 
 def UsunKrawedzieZtakimWierzcholkiem(krawedzie: droga, wierzcholek):
     print("Usuwanie")
-    for krawedz in krawedzie:
-        print(krawedz.wierzcholekA + " : " + krawedz.wierzcholekB)
-        if ((krawedz.wierzcholekA == wierzcholek) or (krawedz.wierzcholekB == wierzcholek)):
-            krawedzie.remove(krawedz)
+    print(wierzcholek)
+    krawedzie = [krawedz for krawedz in krawedzie if krawedz.wierzcholekA != wierzcholek and krawedz.wierzcholekB != wierzcholek]
     return krawedzie
 
 def WyszukajSciezke(krawedzie: droga, wierzcholek_poczatkowy, wierzcholek_koncowy):
     print("Nowe wywolanie")
     for krawedz in krawedzie:
         print(krawedz.wierzcholekA + " : " + krawedz.wierzcholekB)
-    krawedziee = krawedzie.copy()
+    krawedziee=krawedzie.copy()
     for krawedz in krawedzie:
         sciezka = WyszukajSciezke(UsunKrawedzieZtakimWierzcholkiem(krawedziee, krawedz.wierzcholekA), krawedz.wierzcholekB, wierzcholek_koncowy)
         if ((krawedz.przeplywAktualny < krawedz.przeplywMaksymalny) and (krawedz.wierzcholekA == wierzcholek_poczatkowy)):
             if(krawedz.wierzcholekB == wierzcholek_koncowy):
-                return krawedz
-            else:
-                return sciezka.append(krawedz)
-        elif(sciezka == None):
-            pass
-        
+                itemy = []
+                itemy.append(krawedz)
+                return itemy
+            elif( sciezka != None):
+                sciezka.append(krawedz)
+                return sciezka
     return
 
 class Flow:
@@ -57,10 +55,12 @@ class Flow:
             self.krawedzie.append(droga(krawedz[1], krawedz[0], 0, 0))
 
     def Ford_Fulkerson(self):
-        print(WyszukajSciezke(self.krawedzie, self.zrodlo, self.wyjscie))
+        sciezka = WyszukajSciezke(self.krawedzie, self.zrodlo, self.wyjscie)
+        for droga in sciezka:
+            print(droga.wierzcholekA)
         
         
 if __name__=="__main__":
-    f = Flow(["a","b","c","d","e","f"],['a'],['e'],{('a','b'):3 ,('a','c'):10 , ('a','f'):15 , ('c','f'):2 , ('c','d'):7 , 
-    ('c','e'):9 , ('b','d'):4, ('b','e'):25 , ('d','f'):5 , ('d','c'):2 , ('f','c'):5 , ('f','e'):6 , ('f','d'):3})
+    f = Flow(["a","b","c","d","e","f"],['a'],['e'],{('a','b'):3 ,('a','c'):10 , ('a','f'):15 , ('c','d'):7 , 
+    ('c','e'):9 , ('b','d'):4, ('b','e'):25 , ('d','f'):5 , ('f','c'):5 , ('f','e'):6 })
     f.Ford_Fulkerson()
