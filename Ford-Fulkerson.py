@@ -1,11 +1,12 @@
 
 class droga:
 
-    def __init__(self, wierzcholekA, wierzcholekB, przeplywAktualny, przeplywMaksymalny):
+    def __init__(self, wierzcholekA, wierzcholekB, przeplywAktualny, przeplywMaksymalny, drogaWsteczna):
         self.wierzcholekA = wierzcholekA
         self.wierzcholekB = wierzcholekB
         self.przeplywAktualny = przeplywAktualny
         self.przeplywMaksymalny = przeplywMaksymalny
+        self.drogaWsteczna = drogaWsteczna
 
 def CzySciezka(krawedzie: droga, zrodlo, wyjscie):
     wierzcholkiA = []
@@ -20,15 +21,10 @@ def CzySciezka(krawedzie: droga, zrodlo, wyjscie):
     return "prawidlowy"
 
 def UsunKrawedzieZtakimWierzcholkiem(krawedzie: droga, wierzcholek):
-    print("Usuwanie")
-    print(wierzcholek)
     krawedzie = [krawedz for krawedz in krawedzie if krawedz.wierzcholekA != wierzcholek and krawedz.wierzcholekB != wierzcholek]
     return krawedzie
 
 def WyszukajSciezke(krawedzie: droga, wierzcholek_poczatkowy, wierzcholek_koncowy):
-    print("Nowe wywolanie")
-    for krawedz in krawedzie:
-        print(krawedz.wierzcholekA + " : " + krawedz.wierzcholekB)
     krawedziee=krawedzie.copy()
     for krawedz in krawedzie:
         sciezka = WyszukajSciezke(UsunKrawedzieZtakimWierzcholkiem(krawedziee, krawedz.wierzcholekA), krawedz.wierzcholekB, wierzcholek_koncowy)
@@ -51,14 +47,36 @@ class Flow:
         self.zrodlo = zrodlo[0]
         self.wyjscie = wyjscie[0]
         for krawedz, wartosc in self.wagi.items():
-            self.krawedzie.append(droga(krawedz[0], krawedz[1], 0, wartosc))
-            self.krawedzie.append(droga(krawedz[1], krawedz[0], 0, 0))
+            droga_w_przod = droga(krawedz[0], krawedz[1], 0, wartosc, None)
+            droga_w_tyl = droga(krawedz[1], krawedz[0], 0, 0, droga_w_przod)
+            droga_w_przod.drogaWsteczna = droga_w_tyl
+            self.krawedzie.append(droga_w_przod)
+            self.krawedzie.append(droga_w_tyl)
 
     def Ford_Fulkerson(self):
         sciezka = WyszukajSciezke(self.krawedzie, self.zrodlo, self.wyjscie)
-        for droga in sciezka:
-            print(droga.wierzcholekA)
-        
+        wyjscie = 0
+        zrodlo = 0
+        while(sciezka!=None):
+            przepustowosc = sciezka[0].przeplywMaksymalny - sciezka[0].przeplywAktualny
+            for droga in sciezka:
+                if (droga.przeplywMaksymalny - droga.przeplywAktualny) < przepustowosc:
+                    przepustowosc = (droga.przeplywMaksymalny - droga.przeplywAktualny)
+            for droga in sciezka:
+                droga.przeplywAktualny += przepustowosc
+                droga.drogaWsteczna.przeplywAktualny -= przepustowosc
+            sciezka = WyszukajSciezke(self.krawedzie, self.zrodlo, self.wyjscie)
+        for krawedz in self.krawedzie:
+            if krawedz.wierzcholekA == self.zrodlo:
+                zrodlo += krawedz.przeplywAktualny
+            if krawedz.wierzcholekB == self.wyjscie:
+                wyjscie += krawedz.przeplywAktualny
+        if(wyjscie == zrodlo):
+            print("Maksymalny przeplyw = " + str(zrodlo))
+        else:
+            print("Cos poszło nie tak")
+        #for krawedz in self.krawedzie:
+            #print("Krawedz: " + str(krawedz.wierzcholekA) + " : " + str(krawedz.wierzcholekB) + ". Przepływ: " + str(krawedz.przeplywAktualny) +  "/" + str(krawedz.przeplywMaksymalny))
         
 if __name__=="__main__":
     f = Flow(["a","b","c","d","e","f"],['a'],['e'],{('a','b'):3 ,('a','c'):10 , ('a','f'):15 , ('c','d'):7 , 
